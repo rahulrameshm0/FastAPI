@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .calculator {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 350px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .display {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            font-size: 28px;
+            text-align: right;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            word-wrap: break-word;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .number {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .number:hover {
+            background: #e0e0e0;
+        }
+
+        .operator {
+            background: #667eea;
+            color: white;
+        }
+
+        .operator:hover {
+            background: #5568d3;
+        }
+
+        .equals {
+            background: #4CAF50;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background: #45a049;
+        }
+
+        .clear {
+            background: #f44336;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .clear:hover {
+            background: #da190b;
+        }
+
+        .error {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Calculator</h1>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="setOperator('/')">/</button>
+
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="setOperator('*')">*</button>
+
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="setOperator('-')">-</button>
+
+            <button class="number" onclick="appendNumber('0')">0</button>
+            <button class="number" onclick="appendNumber('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+            <button class="operator" onclick="setOperator('+')">+</button>
+
+            <button class="clear" onclick="clearDisplay()">Clear</button>
+        </div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        let currentInput = '';
+        let firstValue = null;
+        let operation = null;
+        let waitingForSecondValue = false;
+
+        function updateDisplay() {
+            const display = document.getElementById('display');
+            display.textContent = currentInput || '0';
+        }
+
+        function appendNumber(num) {
+            document.getElementById('error').textContent = '';
+
+            if (waitingForSecondValue) {
+                currentInput = num;
+                waitingForSecondValue = false;
+            } else {
+                if (num === '.' && currentInput.includes('.')) return;
+                currentInput = currentInput === '0' ? num : currentInput + num;
+            }
+            updateDisplay();
+        }
+
+        function setOperator(op) {
+            document.getElementById('error').textContent = '';
+
+            if (currentInput === '' && firstValue === null) return;
+
+            if (firstValue === null) {
+                firstValue = parseFloat(currentInput);
+            } else if (operation && !waitingForSecondValue) {
+                calculate();
+            }
+
+            operation = op;
+            waitingForSecondValue = true;
+        }
+
+        async function calculate() {
+            if (operation === null || waitingForSecondValue) return;
+
+            const secondValue = parseFloat(currentInput);
+
+            if (isNaN(firstValue) || isNaN(secondValue)) {
+                document.getElementById('error').textContent = 'Invalid input';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/v1/operation', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        value: [firstValue, secondValue],
+                        operation: operation
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Calculation failed');
+                }
+
+                const data = await response.json();
+                currentInput = data.Total.toString();
+                firstValue = data.result;
+                operation = null;
+                waitingForSecondValue = true;
+                updateDisplay();
+            } catch (error) {
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            firstValue = null;
+            operation = null;
+            waitingForSecondValue = false;
+            document.getElementById('error').textContent = '';
+            updateDisplay();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
