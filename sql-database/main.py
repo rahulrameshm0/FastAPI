@@ -5,16 +5,8 @@ import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 
-# --- App Initialization ---
 app = FastAPI()
-
-# Create database tables on startup based on SQLAlchemy models
 models.Base.metadata.create_all(bind=engine)
-
-
-# --- Pydantic Models (Data Schemas) ---
-
-# This model is for creating a Post, inheriting from BaseModel is correct.
 class PostBase(BaseModel):
     title: str
     content: str
