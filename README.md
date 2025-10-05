@@ -16,5 +16,17 @@ It allows users to **create, read, update, and delete tasks** using a RESTful AP
 - Pydantic (for data validation)
 - Uvicorn (for running the server)
 
-## How to Run
-1. Clone the repository:
+You can interact with the API directly using the Swagger UI.
+
+## Notes
+- Tasks are stored **in memory** (Python list), so all data will be lost when the server restarts.
+- Each task has the following structure:
+```
+json
+{
+ "id": 1,
+ "name": "Task Name",
+ "content": "Task details",
+ "completed": false
+}
+```
