@@ -1,6 +1,6 @@
 import random
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 import random
 
 app = FastAPI()
