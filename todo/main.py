@@ -26,7 +26,7 @@ async def get_task(task_id: int):
         if task.id == task_id:
             return task
         raise HTTPException(status_code=404, detail="Id is not found")
-@app.put('task/{task_id}')
+@app.put('/task/{task_id}')
 async def update_task(task_id: int, updated_task: Task):
     for i, task in enumerate(tasks):
         if task.id == task_id:
@@ -34,7 +34,7 @@ async def update_task(task_id: int, updated_task: Task):
             return {"message":"task updated successfully", "task":updated_task}
         raise HTTPException(status_code=404, detail="id not found")
 
-@app.delete('task/{task_id}')
+@app.delete('/task/{task_id}')
 async def delete_task(task_id:int):
     for i, task in enumerate(tasks):
         if task.id == task_id:
